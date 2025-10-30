@@ -14,7 +14,7 @@ func getLocalIP() (string, error) {
 
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		return "", err
+		return "unable to get host's interface addresses: ", err
 	}
 
 	for _, addr := range addrs {
@@ -25,7 +25,7 @@ func getLocalIP() (string, error) {
 
 	}
 
-	return "", fmt.Errorf("no non-loopback IP found")
+	return "unable to get host's IPv4: ", fmt.Errorf("no non-loopback IPv4 found")
 }
 
 func main() {
@@ -34,7 +34,7 @@ func main() {
 
 	ip, err := getLocalIP()
 	if err != nil {
-		log.Fatalf("Failed to get the IP of the host: %v", err)
+		log.Fatalf("Failed to get the IPv4 of the host: %v", err)
 	}
 
 	bind := fmt.Sprintf("%s:0", ip)
