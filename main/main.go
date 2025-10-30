@@ -6,7 +6,6 @@ import (
 	"net"
 	"net/http"
 	"time"
-
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/v4/mem"
 )
@@ -35,7 +34,7 @@ func main() {
 
 	ip, err := getLocalIP()
 	if err != nil {
-		log.Fatalf("Failed to get local IP of the host: %v", err)
+		log.Fatalf("Failed to get the IP of the host: %v", err)
 	}
 
 	bind := fmt.Sprintf("%s:0", ip)
