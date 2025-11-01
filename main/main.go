@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"time"
+
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/v4/mem"
 )
@@ -58,6 +59,7 @@ func reportCpuAndMemData(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "text/event-stream")
 	res.Header().Set("Cache-Control", "no-cache")
 	res.Header().Set("Connection", "keep-alive")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
 
 	memTime := time.NewTicker(time.Second)
 	defer memTime.Stop()
@@ -69,34 +71,37 @@ func reportCpuAndMemData(res http.ResponseWriter, req *http.Request) {
 	rc := http.NewResponseController(res)
 
 	for {
-		select{
-		case <- clientGone:
+		select {
+		case <-clientGone:
 			fmt.Println("the client is disconnected")
 			return
-		case <- memTime.C:
+		case <-memTime.C:
 			m, err := mem.VirtualMemory()
 			if err != nil {
 				log.Fatalf("unable to get memory data: %v", err.Error())
 				return
 			}
+			totalMemory := m.Total / 1073741824 // to convert to GB
+			usedMemory := m.Used / 1073741824
+			usedPercent := m.UsedPercent
 
-			if _, err := fmt.Fprintf(res, "event:memory\n data: Total: %d, Used: %d, Pers: %.2f,\n\n", m.Total, m.Used, m.UsedPercent); err != nil {
-					log.Fatalf("unable to write back to the client: %v", err.Error())
-					return
+			if _, err := fmt.Fprintf(res, "event:memory\ndata: Total: %d GB, Used: %d GB, Percent: %.2f,\n\n", totalMemory, usedMemory, usedPercent); err != nil {
+				log.Fatalf("unable to write back to the client: %v", err.Error())
+				return
 			}
 
 			rc.Flush()
 
-		case <- cpuTime.C:
-			cpu, err := cpu.Times(false) 
+		case <-cpuTime.C:
+			cpu, err := cpu.Times(false)
 			if err != nil {
 				log.Fatalf("unable to get memory data: %v", err.Error())
 				return
 			}
 
-			if _, err := fmt.Fprintf(res, "event:cpu\n data: User: %.2f, System: %.2f, Idle : %.2f,\n\n", cpu[0].User, cpu[0].System, cpu[0].Idle); err != nil {
-					log.Fatalf("unable to write back to the client: %v", err.Error())
-					return
+			if _, err := fmt.Fprintf(res, "event:cpu\ndata: user: %.0f%% system: %.0f%% idle: %.0f%%\n\n", cpu[0].User, cpu[0].System, cpu[0].Idle); err != nil {
+				log.Fatalf("unable to write back to the client: %v", err.Error())
+				return
 			}
 
 			rc.Flush()
