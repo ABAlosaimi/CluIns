@@ -49,6 +49,3 @@ docker run afalosaimi/cluins:latest
 - **Response:** Server-Sent Events (SSE) streaming CPU and memory usage metricies
 
 > Note: the CPU metric returns a single value representing the average CPU usage across all cores
-
-## Author
-ABAlosaimi
