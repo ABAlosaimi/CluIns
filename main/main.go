@@ -93,13 +93,13 @@ func reportCpuAndMemData(res http.ResponseWriter, req *http.Request) {
 			rc.Flush()
 
 		case <-cpuTime.C:
-			cpu, err := cpu.Times(false)
+			cpu, err := cpu.Percent(time.Second, false)
 			if err != nil {
 				log.Fatalf("unable to get memory data: %v", err.Error())
 				return
 			}
 
-			if _, err := fmt.Fprintf(res, "event:cpu\ndata: user: %.0f%% system: %.0f%% idle: %.0f%%\n\n", cpu[0].User, cpu[0].System, cpu[0].Idle); err != nil {
+			if _, err := fmt.Fprintf(res, "event:cpu\ndata: percentage: %.2f%%\n\n", cpu[0]); err != nil {
 				log.Fatalf("unable to write back to the client: %v", err.Error())
 				return
 			}
